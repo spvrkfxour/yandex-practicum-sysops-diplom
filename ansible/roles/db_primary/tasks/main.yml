@@ -1,0 +1,100 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for db_primary
+- name: Install PostgreSQL and required packages (ACL, python3-psycopg2)
+  ansible.builtin.apt:
+    name: "{{ postgresql_packages }}"
+    state: present
+    update_cache: yes
+
+- name: Ensure PostgreSQL is started and enabled
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Configure PostgreSQL parameters
+  ansible.builtin.lineinfile:
+    path: "{{ pg_conf_dir }}/postgresql.conf"
+    regexp: "^#?{{ item.name }}\\s*="
+    line: "{{ item.name }} = {{ item.value }}"
+  loop:
+    - { name: "listen_addresses", value: "'{{ postgres_listen_addresses }}'" }
+    - { name: "port", value: "{{ postgres_port }}" }
+    - { name: "wal_level", value: "'{{ postgres_wal_level }}'" }
+    - { name: "max_wal_senders", value: "{{ postgres_max_wal_senders }}" }
+    - { name: "wal_keep_size", value: "{{ postgres_wal_keep_size }}" }
+    - { name: "hot_standby", value: "'{{ postgres_hot_standby }}'" }
+  notify: Restart PostgreSQL
+
+- name: Configure pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: "{{ pg_conf_dir }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: Restart PostgreSQL
+
+- name: Apply PostgreSQL config changes
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for PostgreSQL to accept connections
+  ansible.builtin.wait_for:
+    host: "127.0.0.1"
+    port: "{{ postgres_port }}"
+    timeout: 30
+
+- name: Create replication user
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ replication_user }}"
+    password: "{{ replication_password }}"
+    role_attr_flags: REPLICATION,LOGIN
+    login_unix_socket: /var/run/postgresql
+
+- name: Create MediaWiki DB user
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ wiki_user }}"
+    password: "{{ wiki_password }}"
+    role_attr_flags: LOGIN
+    login_unix_socket: /var/run/postgresql
+
+- name: Create MediaWiki database
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ wiki_db }}"
+    owner: "{{ wiki_user }}"
+    encoding: UTF8
+    login_unix_socket: /var/run/postgresql
+
+- name: Check that replication user exists
+  become: true
+  become_user: postgres
+  ansible.builtin.command: >
+    psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='{{ replication_user }}';"
+  register: replication_user_check
+  changed_when: false
+  failed_when: replication_user_check.stdout.strip() != "1"
+
+- name: Check that MediaWiki DB user exists
+  become: true
+  become_user: postgres
+  ansible.builtin.command: >
+    psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='{{ wiki_user }}';"
+  register: wiki_user_check
+  changed_when: false
+  failed_when: wiki_user_check.stdout.strip() != "1"
+
+- name: Check that MediaWiki database exists
+  become: true
+  become_user: postgres
+  ansible.builtin.command: >
+    psql -tAc "SELECT 1 FROM pg_database WHERE datname='{{ wiki_db }}';"
+  register: wiki_db_check
+  changed_when: false
+  failed_when: wiki_db_check.stdout.strip() != "1"

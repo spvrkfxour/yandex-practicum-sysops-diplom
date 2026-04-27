@@ -1,0 +1,188 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for zabbix
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ zabbix_base_packages }}"
+    state: present
+    update_cache: true
+
+- name: Download Zabbix repository package
+  ansible.builtin.get_url:
+    url: "https://repo.zabbix.com/zabbix/{{ zabbix_version }}/ubuntu/pool/main/z/zabbix-release/{{ zabbix_repo_package }}"
+    dest: "/tmp/{{ zabbix_repo_package }}"
+    mode: "0644"
+
+- name: Install Zabbix repository package
+  ansible.builtin.apt:
+    deb: "/tmp/{{ zabbix_repo_package }}"
+
+- name: Update apt cache after adding Zabbix repository
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install Zabbix server packages
+  ansible.builtin.apt:
+    name: "{{ zabbix_server_packages }}"
+    state: present
+
+- name: Ensure PostgreSQL is started and enabled
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Create Zabbix DB user
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ zabbix_db_user }}"
+    password: "{{ zabbix_db_password }}"
+    role_attr_flags: "LOGIN"
+    login_unix_socket: /var/run/postgresql
+
+- name: Create Zabbix database
+  become: true
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ zabbix_db_name }}"
+    owner: "{{ zabbix_db_user }}"
+    encoding: "UTF8"
+    login_unix_socket: /var/run/postgresql
+
+- name: Check whether Zabbix schema already imported
+  become: true
+  become_user: postgres
+  ansible.builtin.command: >
+    psql -d {{ zabbix_db_name }} -tAc "SELECT 1 FROM information_schema.tables WHERE table_name='users';"
+  register: zabbix_schema_check
+  changed_when: false
+  failed_when: false
+
+- name: Import initial Zabbix schema
+  ansible.builtin.shell: >
+    zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz |
+    PGPASSWORD='{{ zabbix_db_password }}'
+    psql -h localhost
+    -U {{ zabbix_db_user }}
+    -d {{ zabbix_db_name }}
+  args:
+    executable: /bin/bash
+  when: zabbix_schema_check.stdout.strip() != "1"
+
+- name: Configure DB host in zabbix_server.conf
+  ansible.builtin.lineinfile:
+    path: "/etc/zabbix/zabbix_server.conf"
+    regexp: '^#?DBHost='
+    line: "DBHost=localhost"
+  notify: Restart zabbix-server
+
+- name: Configure DB name in zabbix_server.conf
+  ansible.builtin.lineinfile:
+    path: "/etc/zabbix/zabbix_server.conf"
+    regexp: '^#?DBName='
+    line: "DBName={{ zabbix_db_name }}"
+  notify: Restart zabbix-server
+
+- name: Configure DB user in zabbix_server.conf
+  ansible.builtin.lineinfile:
+    path: "/etc/zabbix/zabbix_server.conf"
+    regexp: '^#?DBUser='
+    line: "DBUser={{ zabbix_db_user }}"
+  notify: Restart zabbix-server
+
+- name: Configure DB password in zabbix_server.conf
+  ansible.builtin.lineinfile:
+    path: "/etc/zabbix/zabbix_server.conf"
+    regexp: '^#?DBPassword='
+    line: "DBPassword={{ zabbix_db_password }}"
+  notify: Restart zabbix-server
+
+- name: Deploy Zabbix frontend PHP config
+  ansible.builtin.template:
+    src: zabbix.conf.php.j2
+    dest: "{{ zabbix_php_config_path }}"
+    owner: www-data
+    group: www-data
+    mode: "0640"
+
+- name: Deploy nginx config for Zabbix frontend
+  ansible.builtin.template:
+    src: zabbix.nginx.conf.j2
+    dest: "{{ zabbix_nginx_site_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart nginx
+
+- name: Enable Zabbix nginx site
+  ansible.builtin.file:
+    src: "{{ zabbix_nginx_site_path }}"
+    dest: "/etc/nginx/sites-enabled/zabbix.conf"
+    state: link
+    force: true
+  notify: Restart nginx
+
+- name: Disable default nginx site
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-enabled/default"
+    state: absent
+  notify: Restart nginx
+
+- name: Configure PHP timezone for Zabbix
+  ansible.builtin.lineinfile:
+    path: "/etc/php/8.1/fpm/php.ini"
+    regexp: '^;?date.timezone\s*='
+    line: "date.timezone = {{ zabbix_timezone }}"
+  notify: Restart php-fpm
+
+- name: Ensure nginx is started and enabled
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Ensure PHP-FPM is started and enabled
+  ansible.builtin.service:
+    name: "{{ zabbix_php_fpm_service }}"
+    state: started
+    enabled: true
+
+- name: Ensure zabbix-server is started and enabled
+  ansible.builtin.service:
+    name: zabbix-server
+    state: started
+    enabled: true
+
+- name: Ensure zabbix-agent is started and enabled
+  ansible.builtin.service:
+    name: zabbix-agent
+    state: started
+    enabled: true
+
+- name: Apply Zabbix service config changes
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for Zabbix frontend HTTP
+  ansible.builtin.wait_for:
+    host: "127.0.0.1"
+    port: "{{ zabbix_frontend_port }}"
+    timeout: 60
+
+- name: Check Zabbix frontend over HTTP
+  ansible.builtin.uri:
+    url: "http://127.0.0.1/"
+    method: GET
+    status_code: 200
+    return_content: true
+  register: zabbix_http_check
+
+- name: Assert Zabbix frontend is reachable
+  ansible.builtin.assert:
+    that:
+      - zabbix_http_check.status == 200
+    fail_msg: "Zabbix frontend HTTP check failed"
+    success_msg: "Zabbix frontend is reachable"
+
+- name: Import monitoring configuration
+  ansible.builtin.import_tasks: monitoring.yml

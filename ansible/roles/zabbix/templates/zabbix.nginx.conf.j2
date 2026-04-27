@@ -1,0 +1,20 @@
+server {
+    listen {{ zabbix_frontend_port }} default_server;
+    server_name _;
+
+    root {{ zabbix_frontend_root }};
+    index index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}

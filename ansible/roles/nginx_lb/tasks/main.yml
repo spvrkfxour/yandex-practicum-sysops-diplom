@@ -1,0 +1,76 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for nginx_lb
+- name: Install nginx
+  ansible.builtin.apt:
+    name: "{{ nginx_packages }}"
+    state: present
+    update_cache: true
+
+- name: Ensure Nginx is started and enabled
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Wait for mediawiki_1 HTTP
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[groups['mediawiki_1'][0]].private_ip }}"
+    port: 80
+    timeout: 30
+  when: groups['mediawiki_1'] | length > 0
+
+- name: Wait for mediawiki_2 HTTP
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[groups['mediawiki_2'][0]].private_ip }}"
+    port: 80
+    timeout: 30
+  when: groups['mediawiki_2'] | default([]) | length > 0
+
+- name: Deploy nginx load balancer config
+  ansible.builtin.template:
+    src: mediawiki-lb.conf.j2
+    dest: "/etc/nginx/sites-available/mediawiki-lb.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart nginx
+
+- name: Enable nginx load balancer site
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/mediawiki-lb.conf"
+    dest: "/etc/nginx/sites-enabled/mediawiki-lb.conf"
+    state: link
+    force: true
+  notify: Restart nginx
+
+- name: Disable default nginx site
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-enabled/default"
+    state: absent
+  notify: Restart nginx
+
+- name: Apply nginx config changes
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for load balancer HTTP
+  ansible.builtin.wait_for:
+    host: "127.0.0.1"
+    port: "{{ nginx_lb_listen_port }}"
+    timeout: 30
+
+- name: Check load balancer main page over HTTP
+  ansible.builtin.uri:
+    url: "http://127.0.0.1/"
+    method: GET
+    status_code: 200
+    return_content: true
+  register: nginx_lb_http_check
+
+- name: Assert load balancer response
+  ansible.builtin.assert:
+    that:
+      - nginx_lb_http_check.status == 200
+      - "'MediaWiki' in nginx_lb_http_check.content"
+    fail_msg: "Nginx load balancer HTTP check failed"
+    success_msg: "Nginx load balancer is reachable"

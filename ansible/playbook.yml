@@ -1,0 +1,58 @@
+# Группа хостов "db_primary": {"hosts": ["db-primary"]}
+# Можно применить к одному хосту из группы
+- hosts: db_primary
+  become: yes
+  roles:
+    - db_primary
+  tags:
+    - db_primary
+    - db
+
+- hosts: db_replica
+  become: yes
+  roles:
+    - db_replica
+  tags:
+    - db_replica
+    - db
+
+- hosts: mediawiki_1
+  become: yes
+  roles:
+    - mediawiki_1
+  tags:
+    - mediawiki_1
+    - mediawiki_main
+    - mediawiki
+
+- hosts: mediawiki_2
+  become: yes
+  roles:
+    - mediawiki_2
+  tags:
+    - mediawiki_2
+    - mediawiki_replica
+    - mediawiki
+
+- hosts: nginx_lb
+  become: yes
+  roles:
+    - nginx_lb
+  tags:
+    - nginx_lb
+    - nginx
+
+- hosts: backup
+  become: yes
+  roles:
+    - backup
+  tags:
+    - backup
+
+- hosts: zabbix
+  become: yes
+  roles:
+    - zabbix
+  tags:
+    - zabbix
+    - monitoring

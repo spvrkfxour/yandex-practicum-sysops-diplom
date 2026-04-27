@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BACKUP_DIR="{{ backup_db_dir }}"
+SSH_KEY="{{ backup_ssh_key_path }}"
+SSH_USER="{{ backup_ssh_user }}"
+DB_HOST="{{ backup_db_host }}"
+DB_NAME="{{ backup_db_name }}"
+KEEP_DAYS="{{ backup_keep_days_db }}"
+
+TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+BACKUP_FILE="${BACKUP_DIR}/${DB_NAME}_${TIMESTAMP}.dump"
+LATEST_LINK="${BACKUP_DIR}/latest.dump"
+
+log() {
+  echo "[$(date '+%F %T')] $*"
+}
+
+cleanup_old_backups() {
+  find "${BACKUP_DIR}" -maxdepth 1 -type f -name "*.dump" -mtime +"${KEEP_DAYS}" -delete
+}
+
+mkdir -p "${BACKUP_DIR}"
+
+log "Starting PostgreSQL backup from ${DB_HOST} ..."
+ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${SSH_USER}@${DB_HOST}" \
+  "sudo -u postgres pg_dump -Fc --no-owner --no-privileges '${DB_NAME}'" > "${BACKUP_FILE}"
+
+ln -sfn "${BACKUP_FILE}" "${LATEST_LINK}"
+
+cleanup_old_backups
+
+log "PostgreSQL backup completed: ${BACKUP_FILE}"

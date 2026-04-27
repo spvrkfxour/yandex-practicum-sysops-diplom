@@ -1,0 +1,14 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for mediawiki_2
+mediawiki_server_name: mediawiki-2
+
+mediawiki_primary_app_host: "{{ groups['mediawiki_1'][0] }}"
+
+mediawiki_archive_path: /tmp/mediawiki.tar.gz
+mediawiki_extract_parent: /var/www
+mediawiki_release_dir: "/var/www/mediawiki-{{ mediawiki_version }}"
+mediawiki_localsettings_path: "{{ mediawiki_install_dir }}/LocalSettings.php"
+
+php_fpm_service: php8.1-fpm
+php_fpm_socket: /run/php/php8.1-fpm.sock

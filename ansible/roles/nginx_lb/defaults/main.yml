@@ -1,0 +1,6 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for nginx_lb
+nginx_lb_server_name: wiki.local
+nginx_lb_listen_port: 80
+nginx_lb_upstream_name: mediawiki_backend

@@ -1,0 +1,35 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for backup
+backup_root_dir: /srv/backups
+backup_db_dir: "{{ backup_root_dir }}/postgresql"
+backup_fs_dir: "{{ backup_root_dir }}/mediawiki"
+backup_script_dir: /opt/backup
+backup_log_dir: /var/log/backup
+
+backup_source_hosts:
+  - "{{ groups['db_primary'][0] }}"
+  - "{{ groups['mediawiki_1'][0] }}"
+
+backup_source_users:
+  db_primary: vagrant
+  mediawiki_1: vagrant
+
+backup_ssh_key_path: /root/.ssh/backup_id_ed25519
+backup_ssh_user: vagrant
+
+backup_db_host: "{{ hostvars[groups['db_primary'][0]].private_ip }}"
+backup_db_name: "{{ wiki_db }}"
+backup_db_port: "{{ postgres_port }}"
+
+backup_mediawiki_host: "{{ hostvars[groups['mediawiki_1'][0]].private_ip }}"
+backup_mediawiki_path: /var/www/mediawiki
+
+backup_keep_days_db: 7
+backup_keep_days_fs: 7
+
+backup_db_schedule_minute: "0"
+backup_db_schedule_hour: "2"
+
+backup_fs_schedule_minute: "30"
+backup_fs_schedule_hour: "2"

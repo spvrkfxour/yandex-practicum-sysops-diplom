@@ -1,0 +1,179 @@
+---
+- name: Ensure Zabbix host group exists
+  become: false
+  vars:
+    ansible_network_os: community.zabbix.zabbix
+    ansible_connection: httpapi
+    ansible_host: "{{ hostvars[inventory_hostname].private_ip }}"
+    ansible_httpapi_port: 80
+    ansible_httpapi_use_ssl: false
+    ansible_httpapi_validate_certs: false
+    ansible_zabbix_url_path: "/"
+    ansible_user: "{{ zabbix_api_user }}"
+    ansible_httpapi_pass: "{{ zabbix_api_password }}"
+  community.zabbix.zabbix_group:
+    state: present
+    host_groups:
+      - "{{ zabbix_host_group }}"
+
+- name: Create hosts in Zabbix
+  become: false
+  vars:
+    ansible_network_os: community.zabbix.zabbix
+    ansible_connection: httpapi
+    ansible_host: "{{ hostvars[inventory_hostname].private_ip }}"
+    ansible_httpapi_port: 80
+    ansible_httpapi_use_ssl: false
+    ansible_httpapi_validate_certs: false
+    ansible_zabbix_url_path: "/"
+    ansible_user: "{{ zabbix_api_user }}"
+    ansible_httpapi_pass: "{{ zabbix_api_password }}"
+  community.zabbix.zabbix_host:
+    host_name: "{{ item.host_name }}"
+    visible_name: "{{ item.visible_name }}"
+    host_groups: "{{ item.groups }}"
+    interfaces:
+      - type: 1
+        main: 1
+        useip: 1
+        ip: "{{ item.ip }}"
+        dns: ""
+        port: "10050"
+    status: enabled
+    state: present
+  loop: "{{ zabbix_hosts }}"
+
+- name: Create HTTP web scenarios in Zabbix
+  become: false
+  vars:
+    ansible_network_os: community.zabbix.zabbix
+    ansible_connection: httpapi
+    ansible_host: "{{ hostvars[inventory_hostname].private_ip }}"
+    ansible_httpapi_port: 80
+    ansible_httpapi_use_ssl: false
+    ansible_httpapi_validate_certs: false
+    ansible_zabbix_url_path: "/"
+    ansible_user: "{{ zabbix_api_user }}"
+    ansible_httpapi_pass: "{{ zabbix_api_password }}"
+  community.zabbix.zabbix_httptest:
+    host_name: "{{ item.host_name }}"
+    name: "{{ item.scenario_name }}"
+    state: present
+    params:
+      delay: "30s"
+      steps:
+        - name: "Main page"
+          "no": 1
+          url: "{{ item.url }}"
+          status_codes: "{{ item.status_codes }}"
+  loop: "{{ zabbix_http_targets }}"
+
+- name: Create DB TCP port items in Zabbix
+  become: false
+  vars:
+    ansible_network_os: community.zabbix.zabbix
+    ansible_connection: httpapi
+    ansible_host: "{{ hostvars[inventory_hostname].private_ip }}"
+    ansible_httpapi_port: 80
+    ansible_httpapi_use_ssl: false
+    ansible_httpapi_validate_certs: false
+    ansible_zabbix_url_path: "/"
+    ansible_user: "{{ zabbix_api_user }}"
+    ansible_httpapi_pass: "{{ zabbix_api_password }}"
+  community.zabbix.zabbix_item:
+    host_name: "{{ item.host_name }}"
+    name: "{{ item.item_name }}"
+    params:
+      type: simple_check
+      key_: "{{ item.item_key }}"
+      value_type: numeric_unsigned
+      delay: "30s"
+      status: enabled
+    state: present
+  loop: "{{ zabbix_db_tcp_targets }}"
+
+- name: Create HTTP web scenario triggers
+  become: false
+  vars:
+    ansible_network_os: community.zabbix.zabbix
+    ansible_connection: httpapi
+    ansible_host: "{{ hostvars[inventory_hostname].private_ip }}"
+    ansible_httpapi_port: 80
+    ansible_httpapi_use_ssl: false
+    ansible_httpapi_validate_certs: false
+    ansible_zabbix_url_path: "/"
+    ansible_user: "{{ zabbix_api_user }}"
+    ansible_httpapi_pass: "{{ zabbix_api_password }}"
+  community.zabbix.zabbix_trigger:
+    host_name: "{{ item.host_name }}"
+    name: "{{ item.scenario_name }} failed"
+    state: present
+    params:
+      expression: "last(/{{ item.host_name }}/web.test.fail[{{ item.scenario_name }}])<>0"
+      severity: high
+      status: enabled
+  loop: "{{ zabbix_http_targets }}"
+
+- name: Create HTTP response time triggers
+  become: false
+  vars:
+    ansible_network_os: community.zabbix.zabbix
+    ansible_connection: httpapi
+    ansible_host: "{{ hostvars[inventory_hostname].private_ip }}"
+    ansible_httpapi_port: 80
+    ansible_httpapi_use_ssl: false
+    ansible_httpapi_validate_certs: false
+    ansible_zabbix_url_path: "/"
+    ansible_user: "{{ zabbix_api_user }}"
+    ansible_httpapi_pass: "{{ zabbix_api_password }}"
+  community.zabbix.zabbix_trigger:
+    host_name: "{{ item.host_name }}"
+    name: "{{ item.scenario_name }} response time is high"
+    state: present
+    params:
+      expression: "last(/{{ item.host_name }}/web.test.time[{{ item.scenario_name }},Main page,resp])>2"
+      severity: warning
+      status: enabled
+  loop: "{{ zabbix_http_targets }}"
+
+- name: Create trigger for db-primary PostgreSQL port down
+  become: false
+  vars:
+    ansible_network_os: community.zabbix.zabbix
+    ansible_connection: httpapi
+    ansible_host: "{{ hostvars[inventory_hostname].private_ip }}"
+    ansible_httpapi_port: 80
+    ansible_httpapi_use_ssl: false
+    ansible_httpapi_validate_certs: false
+    ansible_zabbix_url_path: "/"
+    ansible_user: "{{ zabbix_api_user }}"
+    ansible_httpapi_pass: "{{ zabbix_api_password }}"
+  community.zabbix.zabbix_trigger:
+    host_name: "db-primary"
+    name: "db-primary PostgreSQL port 5432 is unavailable"
+    params:
+      expression: "last(/db-primary/net.tcp.service[tcp,{{ hostvars[groups['db_primary'][0]].private_ip }},5432])=0"
+      severity: high
+      status: enabled
+    state: present
+
+- name: Create trigger for db-replica PostgreSQL port down
+  become: false
+  vars:
+    ansible_network_os: community.zabbix.zabbix
+    ansible_connection: httpapi
+    ansible_host: "{{ hostvars[inventory_hostname].private_ip }}"
+    ansible_httpapi_port: 80
+    ansible_httpapi_use_ssl: false
+    ansible_httpapi_validate_certs: false
+    ansible_zabbix_url_path: "/"
+    ansible_user: "{{ zabbix_api_user }}"
+    ansible_httpapi_pass: "{{ zabbix_api_password }}"
+  community.zabbix.zabbix_trigger:
+    host_name: "db-replica"
+    name: "db-replica PostgreSQL port 5432 is unavailable"
+    params:
+      expression: "last(/db-replica/net.tcp.service[tcp,{{ hostvars[groups['db_replica'][0]].private_ip }},5432])=0"
+      severity: high
+      status: enabled
+    state: present

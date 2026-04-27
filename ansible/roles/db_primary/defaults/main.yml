@@ -1,0 +1,8 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for db_primary
+postgres_listen_addresses: "*"
+postgres_wal_level: "replica"
+postgres_max_wal_senders: 5
+postgres_wal_keep_size: 64MB
+postgres_hot_standby: "on"

@@ -1,0 +1,53 @@
+{
+  "vms": {
+    "db-primary": {
+      "name": "DB Primary",
+      "ip": "192.168.56.10",
+      "role": "db_primary",
+      "memory": 512,
+      "cpus": 1
+    },
+    "db-replica": {
+      "name": "DB Replica",
+      "ip": "192.168.56.11",
+      "role": "db_replica",
+      "memory": 512,
+      "cpus": 1
+    },
+    "mediawiki-1": {
+      "name": "MediaWiki App 1",
+      "ip": "192.168.56.12",
+      "role": "mediawiki_1",
+      "memory": 512,
+      "cpus": 1
+    },
+    "mediawiki-2": {
+      "name": "MediaWiki App 2",
+      "ip": "192.168.56.13",
+      "role": "mediawiki_2",
+      "memory": 512,
+      "cpus": 1
+    },
+    "nginx-lb": {
+      "name": "Nginx Load Balancer",
+      "ip": "192.168.56.14",
+      "role": "nginx_lb",
+      "memory": 512,
+      "cpus": 1
+    },
+    "backup-1": {
+      "name": "Backup Server",
+      "ip": "192.168.56.15",
+      "role": "backup",
+      "memory": 512,
+      "cpus": 1
+    },
+    "zabbix-1": {
+      "name": "Zabbix Monitoring Server",
+      "ip": "192.168.56.16",
+      "role": "zabbix",
+      "memory": 2048,
+      "cpus": 1
+    }
+  }
+}

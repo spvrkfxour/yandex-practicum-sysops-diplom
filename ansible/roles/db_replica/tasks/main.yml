@@ -1,0 +1,130 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for db_replica
+- name: Install PostgreSQL and required packages (ACL, python3-psycopg2)
+  ansible.builtin.apt:
+    name: "{{ postgresql_packages }}"
+    state: present
+    update_cache: yes
+
+- name: Ensure PostgreSQL is stopped before replica initialization
+  ansible.builtin.service:
+    name: postgresql
+    state: stopped
+    enabled: true
+  failed_when: false
+
+- name: Wait for primary PostgreSQL port
+  ansible.builtin.wait_for:
+    host: "{{ primary_host }}"
+    port: "{{ primary_port}}"
+    timeout: 30
+
+- name: Check if replica already initialized
+  ansible.builtin.stat:
+    path: "{{ pg_data_dir }}/standby.signal"
+  register: standby_signal
+
+- name: Remove PostgreSQL data directory before replica initialization
+  ansible.builtin.file:
+    path: "{{ pg_data_dir }}"
+    state: absent
+  when: force_reinit_replica | bool or not standby_signal.stat.exists
+
+- name: Recreate PostgreSQL data directory before replica initialization
+  ansible.builtin.file:
+    path: "{{ pg_data_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0700"
+  when: force_reinit_replica | bool or not standby_signal.stat.exists
+
+- name: Ensure PostgreSQL data directory exists
+  ansible.builtin.file:
+    path: "{{ pg_data_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0700"
+
+- name: Run pg_basebackup from primary
+  become: true
+  become_user: postgres
+  ansible.builtin.command: >
+    pg_basebackup
+    -h {{ primary_host }}
+    -p {{ primary_port }}
+    -U {{ replication_user }}
+    -D {{ pg_data_dir }}
+    -Fp
+    -Xs
+    -P
+    -R
+  environment:
+    PGPASSWORD: "{{ replication_password }}"
+  when: force_reinit_replica | bool or not standby_signal.stat.exists
+  register: pg_basebackup_result
+  changed_when: true
+
+- name: Check that standby.signal exists
+  ansible.builtin.stat:
+    path: "{{ pg_data_dir}}/standby.signal"
+  register: standby_signal_after
+
+- name: Fail if standby.signal was not created
+  ansible.builtin.fail:
+    msg: "standby.signal was not created, replica initialization failed"
+  when: not standby_signal_after.stat.exists
+
+- name: Configure PostgreSQL parameters on replica
+  ansible.builtin.lineinfile:
+    path: "{{ pg_conf_dir }}/postgresql.conf"
+    regexp: "^#?{{ item.name }}\\s*="
+    line: "{{ item.name }} = {{ item.value }}"
+  loop:
+    - { name: "listen_addresses", value: "'{{ postgres_listen_addresses }}'" }
+    - { name: "port", value: "{{ postgres_port }}" }
+    - { name: "hot_standby", value: "'{{ postgres_hot_standby }}'" }
+  notify: Restart PostgreSQL
+
+- name: Ensure permissions on PostgreSQL data directory
+  ansible.builtin.file:
+    path: "{{ pg_data_dir }}"
+    state: directory
+    recurse: true
+    owner: postgres
+    group: postgres
+
+- name: Apply PostgreSQL config changes
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure PostgreSQL is started and enabled
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Wait for PostgreSQL to accept connections on replica
+  ansible.builtin.wait_for:
+    host: "127.0.0.1"
+    port: "{{ postgres_port }}"
+    timeout: 30
+
+- name: Check that replica is in recovery mode
+  become: true
+  become_user: postgres
+  ansible.builtin.command: >
+    psql -tAc "SELECT pg_is_in_recovery();"
+  register: replica_recovery_check
+  changed_when: false
+  failed_when: replica_recovery_check.stdout.strip() != "t"
+
+- name: Check that MediaWiki database exists on replica
+  become: true
+  become_user: postgres
+  ansible.builtin.command: >
+    psql -tAc "SELECT 1 FROM pg_database WHERE datname='{{ wiki_db }}';"
+  register: replica_wiki_db_check
+  changed_when: false
+  failed_when: replica_wiki_db_check.stdout.strip() != "1"

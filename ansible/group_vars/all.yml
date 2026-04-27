@@ -1,0 +1,71 @@
+mediawiki_version: "1.42.1"
+mediawiki_download_url: "https://releases.wikimedia.org/mediawiki/1.42/mediawiki-{{ mediawiki_version }}.tar.gz"
+
+mediawiki_install_dir: /var/www/mediawiki
+mediawiki_owner: www-data
+mediawiki_group: www-data
+
+postgres_version: 14
+postgres_cluster: main
+postgres_port: 5432
+
+replication_user: replicator
+replication_password: replicatorpassword
+
+wiki_db: my_wiki
+wiki_user: wikiuser
+wiki_password: wikiuserpassword
+
+pg_data_dir: "/var/lib/postgresql/{{ postgres_version }}/{{ postgres_cluster }}"
+pg_conf_dir: "/etc/postgresql/{{ postgres_version }}/{{ postgres_cluster }}"
+
+postgresql_packages:
+  - postgresql
+  - acl
+  - python3-psycopg2
+
+nginx_packages:
+  - nginx
+
+php_packages:
+  - php
+  - php-fpm
+  - php-intl
+  - php-mbstring
+  - php-xml
+  - php-apcu
+  - php-curl
+  - php-pgsql
+  - php-cli
+  - php-zip
+  - php-gd
+
+backup_packages:
+  - openssh-client
+  - cron
+  - gzip
+  - tar
+
+zabbix_base_packages:
+  - nginx
+  - php-fpm
+  - php-pgsql
+  - php-mbstring
+  - php-gd
+  - php-xml
+  - php-bcmath
+  - php-ldap
+  - php-curl
+  - php-zip
+  - php-intl
+  - postgresql
+  - acl
+  - python3-psycopg2
+  - python3-requests
+  - wget
+
+zabbix_server_packages:
+  - zabbix-server-pgsql
+  - zabbix-frontend-php
+  - zabbix-sql-scripts
+  - zabbix-agent

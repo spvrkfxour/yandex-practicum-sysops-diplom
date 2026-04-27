@@ -1,0 +1,49 @@
+require 'json'
+
+# Поиск конфиг файла в директории выше
+config_file = File.join(File.dirname(__FILE__), '..', 'config.json')
+
+# Если файл существует то читаем
+if File.exist?(config_file)
+  config_data = JSON.parse(File.read(config_file))
+else
+  puts "Config file config.json not found at #{config_file}!"
+  exit
+end
+
+# Зеркало для образов
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+
+
+Vagrant.configure("2") do |config|
+    config.vm.box = "ubuntu/jammy64"
+    config.ssh.insert_key = false
+
+    # Отключаем автоматическое обновление, установку и удаленный поиск Guest Additions
+    if Vagrant.has_plugin?("vagrant-vbguest")
+        config.vbguest.auto_update = false
+        config.vbguest.no_install = true
+        config.vbguest.no_remote = true
+    end
+
+    config.vm.provider "virtualbox" do |vb|
+        vb.gui = false
+    end
+
+    # Проходим по json и для каждой vms в файле создаем ВМ с настройками указанными в json. В хеше ключ vm_name и значение vm_config
+    config_data['vms'].each do |vm_name, vm_config|
+        config.vm.define vm_name do |vm|
+            vm.vm.hostname = vm_name
+            
+            if vm_config['ip']
+                vm.vm.network "private_network", ip: vm_config['ip']
+            end
+            
+            vm.vm.provider "virtualbox" do |vb|
+                vb.name = vm_config['name']
+                vb.memory = vm_config['memory']
+                vb.cpus = vm_config['cpus']
+            end
+        end
+    end
+end

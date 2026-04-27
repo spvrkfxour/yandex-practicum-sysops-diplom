@@ -1,0 +1,11 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for db_replica
+postgres_listen_addresses: "*"
+postgres_hot_standby: "on"
+
+primary_host: "{{ hostvars[groups['db_primary'][0]].private_ip }}"
+primary_port: "{{ postgres_port }}"
+
+# Запускать ли pg_basebackup при повторном плейбуке
+force_reinit_replica: false

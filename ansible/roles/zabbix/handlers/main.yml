@@ -1,0 +1,22 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for zabbix
+- name: Restart postgresql
+  ansible.builtin.service:
+    name: postgresql
+    state: restarted
+
+- name: Restart zabbix-server
+  ansible.builtin.service:
+    name: zabbix-server
+    state: restarted
+
+- name: Restart nginx
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+
+- name: Restart php-fpm
+  ansible.builtin.service:
+    name: "{{ zabbix_php_fpm_service }}"
+    state: restarted

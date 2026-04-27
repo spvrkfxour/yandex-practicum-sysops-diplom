@@ -1,0 +1,24 @@
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# Local connections
+local   all             postgres                                peer
+local   all             all                                     peer
+
+# IPv4 local connections
+host    all             all             127.0.0.1/32                                md5
+
+# MediaWiki application connections
+{% for host in groups['mediawiki_1'] | default([]) %}
+host    {{ wiki_db }}   {{ wiki_user }} {{ hostvars[host].private_ip }}/32          md5
+{% endfor %}
+{% for host in groups['mediawiki_2'] | default([]) %}
+host    {{ wiki_db }}   {{ wiki_user }} {{ hostvars[host].private_ip }}/32          md5
+{% endfor %}
+
+# IPv6 local connections
+host    all             all             ::1/128                 md5
+
+# Replication connections from replica hosts
+{% for host in groups['db_replica'] | default([]) %}
+host    replication     {{ replication_user }}  {{ hostvars[host].private_ip }}/32   md5
+{% endfor %}

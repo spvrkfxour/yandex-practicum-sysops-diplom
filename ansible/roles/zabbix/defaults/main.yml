@@ -1,0 +1,100 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for zabbix
+zabbix_version: "7.0"
+zabbix_repo_package: "zabbix-release_latest_7.0+ubuntu22.04_all.deb"
+
+zabbix_db_name: zabbix
+zabbix_db_user: zabbix
+zabbix_db_password: zabbixpassword
+
+zabbix_server_name: "Zabbix"
+zabbix_frontend_port: 80
+zabbix_timezone: "Europe/Moscow"
+
+zabbix_php_fpm_service: php8.1-fpm
+
+zabbix_api_user: "Admin"
+zabbix_api_password: "zabbix"
+
+zabbix_frontend_root: /usr/share/zabbix
+zabbix_nginx_site_path: /etc/nginx/sites-available/zabbix.conf
+zabbix_php_config_path: /etc/zabbix/web/zabbix.conf.php
+zabbix_api_url: "http://127.0.0.1/api_jsonrpc.php"
+
+zabbix_host_group: "Infrastructure"
+
+zabbix_hosts:
+  - host_name: "db-primary"
+    visible_name: "DB Primary"
+    ip: "{{ hostvars[groups['db_primary'][0]].private_ip }}"
+    groups:
+      - "Infrastructure"
+
+  - host_name: "db-replica"
+    visible_name: "DB Replica"
+    ip: "{{ hostvars[groups['db_replica'][0]].private_ip }}"
+    groups:
+      - "Infrastructure"
+
+  - host_name: "mediawiki-1"
+    visible_name: "MediaWiki App 1"
+    ip: "{{ hostvars[groups['mediawiki_1'][0]].private_ip }}"
+    groups:
+      - "Infrastructure"
+
+  - host_name: "mediawiki-2"
+    visible_name: "MediaWiki App 2"
+    ip: "{{ hostvars[groups['mediawiki_2'][0]].private_ip }}"
+    groups:
+      - "Infrastructure"
+
+  - host_name: "nginx-lb"
+    visible_name: "Nginx Load Balancer"
+    ip: "{{ hostvars[groups['nginx_lb'][0]].private_ip }}"
+    groups:
+      - "Infrastructure"
+
+  - host_name: "backup-1"
+    visible_name: "Backup Server"
+    ip: "{{ hostvars[groups['backup'][0]].private_ip }}"
+    groups:
+      - "Infrastructure"
+
+  - host_name: "zabbix-1"
+    visible_name: "Zabbix Monitoring Server"
+    ip: "{{ hostvars[groups['zabbix'][0]].private_ip }}"
+    groups:
+      - "Infrastructure"
+
+zabbix_http_targets:
+  - host_name: "nginx-lb"
+    scenario_name: "HTTP nginx-lb"
+    url: "http://{{ hostvars[groups['nginx_lb'][0]].private_ip }}"
+    status_codes:
+      - 200
+
+  - host_name: "mediawiki-1"
+    scenario_name: "HTTP mediawiki-1"
+    url: "http://{{ hostvars[groups['mediawiki_1'][0]].private_ip }}"
+    status_codes:
+      - 200
+      - 301
+      - 302
+
+  - host_name: "mediawiki-2"
+    scenario_name: "HTTP mediawiki-2"
+    url: "http://{{ hostvars[groups['mediawiki_2'][0]].private_ip }}"
+    status_codes:
+      - 200
+      - 301
+      - 302
+
+zabbix_db_tcp_targets:
+  - host_name: "db-primary"
+    item_name: "PostgreSQL TCP 5432"
+    item_key: "net.tcp.service[tcp,{{ hostvars[groups['db_primary'][0]].private_ip }},5432]"
+
+  - host_name: "db-replica"
+    item_name: "PostgreSQL TCP 5432"
+    item_key: "net.tcp.service[tcp,{{ hostvars[groups['db_replica'][0]].private_ip }},5432]"
