@@ -371,3 +371,132 @@ mediawiki_1/templates/mediawiki.nginx.conf.j2
 <img width="617" height="638" alt="Screenshot From 2026-04-29 10-30-00" src="https://github.com/user-attachments/assets/4acd3646-bc2e-4b18-9fda-99fa2d6a76da" />
 <br><br>
 mediawiki_1/tasks/main.yml
+<img width="407" height="672" alt="Screenshot From 2026-04-29 12-37-25" src="https://github.com/user-attachments/assets/b3be2808-e242-4af4-a10d-54cf4bf597e4" />
+<br><br>
+<img width="503" height="697" alt="Screenshot From 2026-04-29 12-38-09" src="https://github.com/user-attachments/assets/d4a1735f-4ea7-44ee-9d07-c9cf050c0414" />
+<br><br>
+<img width="678" height="621" alt="Screenshot From 2026-04-29 12-38-42" src="https://github.com/user-attachments/assets/0dbfdd27-6bdb-4409-b805-d8e63fde65a3" />
+<br><br>
+<img width="739" height="462" alt="Screenshot From 2026-04-29 12-39-28" src="https://github.com/user-attachments/assets/2d1da3b4-62ba-4a7e-b0a0-d628df13171d" />
+<br><br>
+Также нужно обновить pg_hba.conf для роли db_primary чтобы MediaWiki хост мог подключаться к БД
+<img width="617" height="163" alt="Screenshot From 2026-04-29 12-40-28" src="https://github.com/user-attachments/assets/9ac55b4e-8397-41cb-b408-beaefe3aa157" />
+<br><br>
+Обновим плейбук и проверим
+<img width="241" height="194" alt="Screenshot From 2026-04-29 12-41-01" src="https://github.com/user-attachments/assets/4130522d-ce49-4acd-804c-acae73d70ddc" />
+<br><br>
+<img width="619" height="286" alt="Screenshot From 2026-04-29 12-41-24" src="https://github.com/user-attachments/assets/bf08100f-675d-4c4e-aee7-f8bf73343893" />
+<br><br>
+Теперь создадим роль для второго хоста MediaWiki. Туда будут импортированы настройки сервиса с первого хоста
+
+```console
+ansible-galaxy init mediawiki_2
+```
+
+mediawiki_2/defaults/main.yml
+<img width="619" height="286" alt="Screenshot From 2026-04-29 12-42-38" src="https://github.com/user-attachments/assets/23344351-73d6-47ea-bb04-83f939623115" />
+<br><br>
+mediawiki_2/handlers/main.yml
+<img width="361" height="299" alt="Screenshot From 2026-04-29 12-43-18" src="https://github.com/user-attachments/assets/566aff9a-8841-4fb0-8b66-a871aad39b10" />
+<br><br>
+mediawiki_2/templates/mediawiki.nginx.conf.j2
+<img width="612" height="669" alt="Screenshot From 2026-04-29 12-43-49" src="https://github.com/user-attachments/assets/82306474-6b60-4f60-8d56-0bb9d634d831" />
+<br><br>
+mediawiki_2/tasks/main.yml<br>
+Будет похоже на таски с mediawiki_1 но без установки MediaWiki. Конфиг с настройками LocalSettings.php будет просто копироваться
+<img width="485" height="680" alt="Screenshot From 2026-04-29 12-44-33" src="https://github.com/user-attachments/assets/c43cf9a7-9155-4891-8642-fcec0a1011b0" />
+<br><br>
+<img width="506" height="691" alt="Screenshot From 2026-04-29 12-44-56" src="https://github.com/user-attachments/assets/2685be31-0fc5-4e1f-87c9-25c03f66ea3b" />
+<br><br>
+<img width="612" height="430" alt="Screenshot From 2026-04-29 12-45-21" src="https://github.com/user-attachments/assets/9722e786-b296-401f-aa8b-da46289bb7fc" />
+<br><br>
+<img width="548" height="504" alt="Screenshot From 2026-04-29 12-45-54" src="https://github.com/user-attachments/assets/5e542097-5c5c-4ed8-bed5-389e682fc93e" />
+<br><br>
+Обновим плейбук и проверим
+<img width="252" height="189" alt="Screenshot From 2026-04-29 12-46-29" src="https://github.com/user-attachments/assets/edebd84c-cb1a-4d17-a7c2-4e66385995ce" />
+<br><br>
+Сейчас mediawiki_2 будет редиректить на mediawiki_1, так как в LocalSetting.php в качестве сервера указан именно mediawiki_1 и эти настройки скопированы на mediawiki_2. После настройки балансировщика указать надо будет именно его
+
+Добавим VM балансировщика в config.json
+<img width="367" height="195" alt="Screenshot From 2026-04-29 12-50-59" src="https://github.com/user-attachments/assets/a3be3666-febb-4b10-9468-1f4f036cc6d5" />
+<br><br>
+Теперь создадим роль для балансировщика нагрузки на nginx который будет редиректить на mediawiki_1 или mediawiki_2
+
+```console
+ansible-galaxy init nginx_lb
+```
+
+nginx_lb/defaults/main.yml
+<img width="431" height="187" alt="Screenshot From 2026-04-29 12-52-04" src="https://github.com/user-attachments/assets/4a71ed08-e5f8-4b15-856e-10f6c6b88749" />
+<br><br>
+nginx_lb/handlers/main.yml
+<img width="313" height="201" alt="Screenshot From 2026-04-29 12-52-38" src="https://github.com/user-attachments/assets/d6c76fc5-44b1-4c38-b43b-77df180fdcaa" />
+<br><br>
+nginx_lb/templates/mediawiki-lb.conf.j2
+<img width="615" height="477" alt="Screenshot From 2026-04-29 12-53-15" src="https://github.com/user-attachments/assets/4c03258b-2c66-4244-a92c-1d13a3efede3" />
+<br><br>
+nginx_lb/tasks/main.yml
+<img width="587" height="710" alt="Screenshot From 2026-04-29 12-54-00" src="https://github.com/user-attachments/assets/cd0abe71-2930-431f-bb4e-97db6c749f07" />
+<br><br>
+<img width="520" height="732" alt="Screenshot From 2026-04-29 12-54-27" src="https://github.com/user-attachments/assets/a34d0e91-dfdd-43d8-bfd6-e69d0f57975b" />
+<br><br>
+Обновим плейбук
+<img width="201" height="155" alt="Screenshot From 2026-04-29 12-55-34" src="https://github.com/user-attachments/assets/e8aea3f7-9162-477e-ab31-7561a004baec" />
+<br><br>
+Также нужно изменить адрес сервера MediaWiki на адрес балансировщика в mediawiki_1/defaults/main.yml
+
+```console
+mediawiki_server_url: "http://{{ hostvars[groups['nginx_lb'][0]].private_ip }}"
+```
+
+Проверки для ролей mediawiki_1 и mediawiki_2 также придется переделать чтобы не падал плейбук
+<img width="531" height="310" alt="Screenshot From 2026-04-29 12-58-12" src="https://github.com/user-attachments/assets/c4978b64-8623-4bea-830a-b398d4a2ebd0" />
+
+И проверим пересоздав всю инфраструктуру и заново запустив плейбук, так как в тасках нет перезаписи LocalSettings.php в случае изменения каких то параметров
+
+```console
+vagrant destroy
+vagrant up
+ansible-playbook playbook.ym
+```
+
+<img width="619" height="255" alt="Screenshot From 2026-04-29 12-58-59" src="https://github.com/user-attachments/assets/ac3832b4-5faa-4d05-b575-2fa5cbe09020" />
+
+Проверим балансировку нагрузки<br>
+На mediawiki-1
+
+```console
+echo "mediawiki-1" | sudo tee /var/www/mediawiki/node.txt
+```
+
+На mediawiki-2
+
+```console
+echo "mediawiki-2" | sudo tee /var/www/mediawiki/node.txt
+```
+
+<img width="619" height="141" alt="Screenshot From 2026-04-29 13-00-01" src="https://github.com/user-attachments/assets/c35aeae1-4ad4-4d32-8d3c-20e10d1f91cd" />
+<br><br>
+Теперь создадим VM где будут бэкапы для файловой системы приложения и базы данных<br>
+Добавим VM для бэкапов в config.json
+<img width="304" height="183" alt="Screenshot From 2026-04-29 13-00-48" src="https://github.com/user-attachments/assets/16d61900-395b-43de-8cb7-719813aa773a" />
+<br><br>
+И создадим роль backup для настройки
+
+```console
+ansible-galaxy init backup
+```
+
+Обновим group_vars/all.yml
+<img width="211" height="115" alt="Screenshot From 2026-04-29 13-01-34" src="https://github.com/user-attachments/assets/eabd080e-9e4f-45d9-a00c-35a0048460d3" />
+<br><br>
+backup/defaults/main.yml
+<img width="601" height="626" alt="Screenshot From 2026-04-29 13-02-23" src="https://github.com/user-attachments/assets/50cf723b-9cb6-4f9d-8b36-351dba09043a" />
+<br><br>
+backup/templates/backup_db.sh.j2
+<img width="612" height="513" alt="Screenshot From 2026-04-29 13-02-58" src="https://github.com/user-attachments/assets/41de3b7b-60ec-4bdc-9fd0-eab9786afc00" />
+<br><br>
+backup/templates/backup_mediawiki_fs.sh.j2
+<img width="612" height="592" alt="Screenshot From 2026-04-29 13-03-33" src="https://github.com/user-attachments/assets/b74d87f1-2d16-4351-a272-9bb09a9d5c81" />
+<br><br>
+backup/tasks/main.yml
