@@ -500,3 +500,110 @@ backup/templates/backup_mediawiki_fs.sh.j2
 <img width="612" height="592" alt="Screenshot From 2026-04-29 13-03-33" src="https://github.com/user-attachments/assets/b74d87f1-2d16-4351-a272-9bb09a9d5c81" />
 <br><br>
 backup/tasks/main.yml
+<img width="617" height="722" alt="Screenshot From 2026-04-30 11-46-22" src="https://github.com/user-attachments/assets/97d81531-82d9-4d59-8447-83a739bf1459" />
+<br><br>
+<img width="518" height="747" alt="Screenshot From 2026-04-30 11-47-07" src="https://github.com/user-attachments/assets/b699f6a5-9f60-489d-97ed-4e681fb450af" />
+<br><br>
+<img width="614" height="472" alt="Screenshot From 2026-04-30 11-47-43" src="https://github.com/user-attachments/assets/79a18b52-447b-43b0-a41a-dd0261bc8726" />
+<br><br>
+И обновим плейбук
+<img width="186" height="147" alt="Screenshot From 2026-04-30 11-48-19" src="https://github.com/user-attachments/assets/9a0013e3-37b9-4bfb-ab31-a75093ab8746" />
+<br><br>
+Проверим
+
+```console
+ls -lh /srv/backups/postgresql/
+ls -lh /srv/backups/mediawiki/
+sudo crontab -l
+```
+
+<img width="680" height="211" alt="Screenshot From 2026-04-30 11-51-04" src="https://github.com/user-attachments/assets/cc415d91-c5b1-4e4c-9563-a2c14ab83c00" />
+<br><br>
+Теперь создадим VM для мониторинга где будет Zabbix<br>
+Добавим VM в конфиг файл. Нужно дать больше памяти чтобы не было ошибки при импорте схемы PostgreSQL
+<img width="449" height="197" alt="Screenshot From 2026-04-30 11-51-54" src="https://github.com/user-attachments/assets/3b5441ee-eba4-4c4a-aa96-296a287af07f" />
+
+И создадим роль
+
+```console
+ansible-galaxy init zabbix
+```
+
+Обновим requirements.yml для Zabbix
+<img width="362" height="209" alt="Screenshot From 2026-04-30 11-52-42" src="https://github.com/user-attachments/assets/b408cbc7-a5e8-41ac-ac36-6d0091eb2834" />
+
+И модуль community.zabbix
+
+```console
+ansible-galaxy collection install community.zabbix --upgrade
+```
+
+Обновим group_vars/all.yml
+<img width="290" height="507" alt="Screenshot From 2026-04-30 11-53-35" src="https://github.com/user-attachments/assets/1b808f4a-9520-457c-acc7-8545d44f80d3" />
+<br><br>
+zabbix/defaults/main.yml
+<img width="677" height="562" alt="Screenshot From 2026-04-30 11-54-11" src="https://github.com/user-attachments/assets/bfe1cd0e-5b31-475f-bd1e-c9042de85509" />
+<br><br>
+<img width="513" height="729" alt="Screenshot From 2026-04-30 11-54-54" src="https://github.com/user-attachments/assets/a3b29432-8b36-4cff-9fbf-13f5b343fa37" />
+<br><br>
+<img width="616" height="456" alt="Screenshot From 2026-04-30 11-55-32" src="https://github.com/user-attachments/assets/cb0db01e-b8aa-416a-9216-684b98950c2e" />
+<br><br>
+zabbix/handlers/main.yml
+<img width="416" height="483" alt="Screenshot From 2026-04-30 11-56-59" src="https://github.com/user-attachments/assets/fbb35ee5-6bf9-41c6-b075-2d7f20a9c64e" />
+<br><br>
+zabbix/templates/zabbix.conf.php.j2
+<img width="462" height="411" alt="Screenshot From 2026-04-30 11-57-39" src="https://github.com/user-attachments/assets/be2896b6-8802-4e9c-b7ac-8b949cffb582" />
+<br><br>
+zabbix/templates/zabbix.nginx.conf.j2
+<img width="531" height="438" alt="Screenshot From 2026-04-30 11-58-26" src="https://github.com/user-attachments/assets/54c450ec-bf4f-42e1-8e73-ace9d0986ccc" />
+<br><br>
+zabbix/tasks/main.yml
+<img width="864" height="674" alt="Screenshot From 2026-04-30 11-59-13" src="https://github.com/user-attachments/assets/3d15f07e-be86-414c-97ca-9b1b9631e8a4" />
+<br><br>
+<img width="866" height="746" alt="Screenshot From 2026-04-30 11-59-52" src="https://github.com/user-attachments/assets/11a2e7cb-382b-4b8a-8174-fa11f66551cf" />
+<br><br>
+<img width="514" height="741" alt="Screenshot From 2026-04-30 12-00-37" src="https://github.com/user-attachments/assets/60626b9b-5d15-4435-969e-099555cad667" />
+<br><br>
+<img width="501" height="697" alt="Screenshot From 2026-04-30 12-01-08" src="https://github.com/user-attachments/assets/4757711b-1472-4385-b8ef-16eef5944fdd" />
+<br><br>
+<img width="477" height="515" alt="Screenshot From 2026-04-30 12-02-06" src="https://github.com/user-attachments/assets/40374d77-5980-475d-a44a-2c91d112a01f" />
+<br><br>
+zabbix/tasks/monitoring.yml
+<img width="541" height="767" alt="Screenshot From 2026-04-30 12-03-06" src="https://github.com/user-attachments/assets/d163faf5-83e4-4d53-9b31-31e7c93bd026" />
+<br><br>
+<img width="661" height="521" alt="Screenshot From 2026-04-30 12-03-49" src="https://github.com/user-attachments/assets/d166ef50-8785-421e-a6c3-606df42ab656" />
+<br><br>
+<img width="676" height="721" alt="Screenshot From 2026-04-30 12-04-40" src="https://github.com/user-attachments/assets/c2d8098a-6e7b-4988-9ed8-becbf876a843" />
+<br><br>
+<img width="864" height="676" alt="Screenshot From 2026-04-30 12-07-01" src="https://github.com/user-attachments/assets/a784e690-d1b8-4bd3-83f2-cc4a9c2c4129" />
+<br><br>
+<img width="868" height="337" alt="Screenshot From 2026-04-30 12-09-26" src="https://github.com/user-attachments/assets/e5906d30-5de1-4356-bce0-84c6cdd5d3dc" />
+<br><br>
+Обновим плейбук
+<img width="274" height="213" alt="Screenshot From 2026-04-30 12-10-02" src="https://github.com/user-attachments/assets/6bf4e4f8-c35e-4269-8c83-53ed4a1bf4d3" />
+<br><br>
+И проверим
+<img width="887" height="306" alt="Screenshot From 2026-04-30 12-10-38" src="https://github.com/user-attachments/assets/fa64c89b-b333-45ff-96eb-6a7c144f9e83" />
+<br><br>
+<img width="904" height="555" alt="Screenshot From 2026-04-30 12-11-09" src="https://github.com/user-attachments/assets/11f29493-b4a7-4174-a370-05dc2919f43f" />
+<br><br>
+<img width="887" height="180" alt="Screenshot From 2026-04-30 12-11-31" src="https://github.com/user-attachments/assets/ba071848-f9d5-440b-a820-d9e58c71556b" />
+<br><br>
+Также для восстановления MediaWiki ноды для роли mediawiki_1 нужно добавить в defaults
+
+```console
+mediawiki_run_installer: true
+```
+
+И в tasks «Run MediaWiki console installer», «Fail if LocalSettings.php was not created»
+
+```console
+when:
+    - mediawiki_run_installer | bool
+```
+
+И в tasks «Check MediaWiki main page over HTTP», «Check that response contains MediaWiki»
+
+```console
+when: final_localsettings.stat.exists
+```
