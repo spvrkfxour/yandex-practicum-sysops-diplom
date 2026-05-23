@@ -627,6 +627,7 @@ zabbix/tasks/monitoring.yml
 <img width="274" height="213" alt="Screenshot From 2026-04-30 12-10-02" src="https://github.com/user-attachments/assets/6bf4e4f8-c35e-4269-8c83-53ed4a1bf4d3" />
 <br><br>
 И проверим
+<br><br>
 <img width="887" height="306" alt="Screenshot From 2026-04-30 12-10-38" src="https://github.com/user-attachments/assets/fa64c89b-b333-45ff-96eb-6a7c144f9e83" />
 <br><br>
 <img width="904" height="555" alt="Screenshot From 2026-04-30 12-11-09" src="https://github.com/user-attachments/assets/11f29493-b4a7-4174-a370-05dc2919f43f" />
