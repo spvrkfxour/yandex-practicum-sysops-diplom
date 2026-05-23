@@ -226,6 +226,7 @@ cd ~/yandex_practicum/ansible/
 code inventory.py
 ```
 Скрипт отправляет команду vagrant ssh-config с названием каждой VM. Полученный ответ от Vagrant скрипт раскладывает и заносит в json который сможет понять ansible
+
 <img width="618" height="288" alt="Screenshot From 2026-04-29 09-54-19" src="https://github.com/user-attachments/assets/9bb26a03-33cd-4d17-b8ca-05ad409235a6" />
 <br>
 <img width="620" height="404" alt="Screenshot From 2026-04-29 09-49-40" src="https://github.com/user-attachments/assets/983af836-a1e0-4819-adf8-c37dd82b156d" />
@@ -276,13 +277,16 @@ ansible-galaxy init db_primary
 ```
 
 db_primary/defaults/main.yml
+
 <img width="355" height="234" alt="Screenshot From 2026-04-29 10-02-52" src="https://github.com/user-attachments/assets/aff21c1d-47f9-4e10-ac03-eaa4ef55053b" />
 
 db_primary/handlers/main.yml
+
 <img width="344" height="201" alt="Screenshot From 2026-04-29 10-03-21" src="https://github.com/user-attachments/assets/b6d93bb4-544b-40fc-b3f1-5f241277b003" />
 
 db_primary/tasks/main.yml
 В тасках также будет несколько проверок. Конфиг postgresql.conf не перезаписываем так как будет ломаться кластер, а заменяем отдельные строчки. И после замены конфигов обязательно перезапускаем сервис
+
 <img width="618" height="668" alt="Screenshot From 2026-04-29 10-07-39" src="https://github.com/user-attachments/assets/7986e6f0-b0f4-48f8-8be8-9dbee46aaa35" />
 <br>
 <img width="489" height="619" alt="Screenshot From 2026-04-29 10-08-08" src="https://github.com/user-attachments/assets/a958dc3a-a7af-4e8d-a951-7019a18324ce" />
@@ -290,6 +294,7 @@ db_primary/tasks/main.yml
 <img width="618" height="432" alt="Screenshot From 2026-04-29 10-08-48" src="https://github.com/user-attachments/assets/78ce8248-df90-437b-8d69-64631289244a" />
 <br><br>
 db_primary/templates/pg_hba.conf.j2
+
 <img width="618" height="281" alt="Screenshot From 2026-04-29 10-09-35" src="https://github.com/user-attachments/assets/a91ee2d8-b214-4c36-9498-224da1f1bc04" />
 <br><br>
 Создадим playbook.yml в /ansible и проверим DB primary
@@ -313,12 +318,15 @@ ansible-galaxy init db_replica
 
 db_replica/defaults/main.yml
 Переменная force_reinit_replica будет отвечать за pg_basebackup при повторных вызовах плейбука. Чтобы каждый раз не копировать БД если реплика уже настроена
+
 <img width="616" height="262" alt="Screenshot From 2026-04-29 10-12-39" src="https://github.com/user-attachments/assets/4cad7268-0ecf-4bf2-a860-2139cb3a1598" />
 <br><br>
 db_replica/handlers/main.yml
+
 <img width="338" height="202" alt="Screenshot From 2026-04-29 10-13-52" src="https://github.com/user-attachments/assets/2160a01d-b098-44e8-9f29-1ca75b359d33" />
 <br><br>
 db_replica/tasks/main.yml
+
 <img width="617" height="605" alt="Screenshot From 2026-04-29 10-15-53" src="https://github.com/user-attachments/assets/c3960455-33f7-4859-b3a7-ef41dbfadd96" />
 <br><br>
 <img width="618" height="618" alt="Screenshot From 2026-04-29 10-16-21" src="https://github.com/user-attachments/assets/6115e291-1f92-4810-85f1-646b9fdec8d7" />
@@ -340,6 +348,7 @@ ansible-playbook playbook.yml
 ```
 
 Проверим, на db_primary выполнив команду
+
 <img width="598" height="133" alt="Screenshot From 2026-04-29 10-20-49" src="https://github.com/user-attachments/assets/87521a20-7f04-4125-bd5a-aede403943dc" />
 <br><br>
 Теперь создадим VM для приложения MediaWiki, добавив в config.json две VM
@@ -357,20 +366,25 @@ ansible-galaxy init mediawiki_1
 ```
 
 Обновим all.yml в group_vars
+
 <img width="617" height="111" alt="Screenshot From 2026-04-29 10-27-17" src="https://github.com/user-attachments/assets/b4819170-e112-416d-9e2d-d1996995e534" />
 <br><br>
 <img width="238" height="312" alt="Screenshot From 2026-04-29 10-27-38" src="https://github.com/user-attachments/assets/a8efc6c4-4dc6-4133-ad31-0cf8f7aeed79" />
 <br><br>
 mediawiki_1/defaults/main.yml
+
 <img width="617" height="367" alt="Screenshot From 2026-04-29 10-28-24" src="https://github.com/user-attachments/assets/e54f5bd1-0ac3-485c-aba1-c36494d9ccfc" />
 <br><br>
 mediawiki_1/handlers/main.yml
+
 <img width="352" height="294" alt="Screenshot From 2026-04-29 10-29-01" src="https://github.com/user-attachments/assets/f3ca0272-a915-40f2-a863-a2c3009b55fd" />
 <br><br>
 mediawiki_1/templates/mediawiki.nginx.conf.j2
+
 <img width="617" height="638" alt="Screenshot From 2026-04-29 10-30-00" src="https://github.com/user-attachments/assets/4acd3646-bc2e-4b18-9fda-99fa2d6a76da" />
 <br><br>
 mediawiki_1/tasks/main.yml
+
 <img width="407" height="672" alt="Screenshot From 2026-04-29 12-37-25" src="https://github.com/user-attachments/assets/b3be2808-e242-4af4-a10d-54cf4bf597e4" />
 <br><br>
 <img width="503" height="697" alt="Screenshot From 2026-04-29 12-38-09" src="https://github.com/user-attachments/assets/d4a1735f-4ea7-44ee-9d07-c9cf050c0414" />
@@ -380,9 +394,11 @@ mediawiki_1/tasks/main.yml
 <img width="739" height="462" alt="Screenshot From 2026-04-29 12-39-28" src="https://github.com/user-attachments/assets/2d1da3b4-62ba-4a7e-b0a0-d628df13171d" />
 <br><br>
 Также нужно обновить pg_hba.conf для роли db_primary чтобы MediaWiki хост мог подключаться к БД
+
 <img width="617" height="163" alt="Screenshot From 2026-04-29 12-40-28" src="https://github.com/user-attachments/assets/9ac55b4e-8397-41cb-b408-beaefe3aa157" />
 <br><br>
 Обновим плейбук и проверим
+
 <img width="241" height="194" alt="Screenshot From 2026-04-29 12-41-01" src="https://github.com/user-attachments/assets/4130522d-ce49-4acd-804c-acae73d70ddc" />
 <br><br>
 <img width="619" height="286" alt="Screenshot From 2026-04-29 12-41-24" src="https://github.com/user-attachments/assets/bf08100f-675d-4c4e-aee7-f8bf73343893" />
@@ -394,16 +410,20 @@ ansible-galaxy init mediawiki_2
 ```
 
 mediawiki_2/defaults/main.yml
+
 <img width="619" height="286" alt="Screenshot From 2026-04-29 12-42-38" src="https://github.com/user-attachments/assets/23344351-73d6-47ea-bb04-83f939623115" />
 <br><br>
 mediawiki_2/handlers/main.yml
+
 <img width="361" height="299" alt="Screenshot From 2026-04-29 12-43-18" src="https://github.com/user-attachments/assets/566aff9a-8841-4fb0-8b66-a871aad39b10" />
 <br><br>
 mediawiki_2/templates/mediawiki.nginx.conf.j2
+
 <img width="612" height="669" alt="Screenshot From 2026-04-29 12-43-49" src="https://github.com/user-attachments/assets/82306474-6b60-4f60-8d56-0bb9d634d831" />
 <br><br>
 mediawiki_2/tasks/main.yml<br>
 Будет похоже на таски с mediawiki_1 но без установки MediaWiki. Конфиг с настройками LocalSettings.php будет просто копироваться
+
 <img width="485" height="680" alt="Screenshot From 2026-04-29 12-44-33" src="https://github.com/user-attachments/assets/c43cf9a7-9155-4891-8642-fcec0a1011b0" />
 <br><br>
 <img width="506" height="691" alt="Screenshot From 2026-04-29 12-44-56" src="https://github.com/user-attachments/assets/2685be31-0fc5-4e1f-87c9-25c03f66ea3b" />
@@ -413,11 +433,13 @@ mediawiki_2/tasks/main.yml<br>
 <img width="548" height="504" alt="Screenshot From 2026-04-29 12-45-54" src="https://github.com/user-attachments/assets/5e542097-5c5c-4ed8-bed5-389e682fc93e" />
 <br><br>
 Обновим плейбук и проверим
+
 <img width="252" height="189" alt="Screenshot From 2026-04-29 12-46-29" src="https://github.com/user-attachments/assets/edebd84c-cb1a-4d17-a7c2-4e66385995ce" />
 <br><br>
 Сейчас mediawiki_2 будет редиректить на mediawiki_1, так как в LocalSetting.php в качестве сервера указан именно mediawiki_1 и эти настройки скопированы на mediawiki_2. После настройки балансировщика указать надо будет именно его
 
 Добавим VM балансировщика в config.json
+
 <img width="367" height="195" alt="Screenshot From 2026-04-29 12-50-59" src="https://github.com/user-attachments/assets/a3be3666-febb-4b10-9468-1f4f036cc6d5" />
 <br><br>
 Теперь создадим роль для балансировщика нагрузки на nginx который будет редиректить на mediawiki_1 или mediawiki_2
@@ -427,20 +449,25 @@ ansible-galaxy init nginx_lb
 ```
 
 nginx_lb/defaults/main.yml
+
 <img width="431" height="187" alt="Screenshot From 2026-04-29 12-52-04" src="https://github.com/user-attachments/assets/4a71ed08-e5f8-4b15-856e-10f6c6b88749" />
 <br><br>
 nginx_lb/handlers/main.yml
+
 <img width="313" height="201" alt="Screenshot From 2026-04-29 12-52-38" src="https://github.com/user-attachments/assets/d6c76fc5-44b1-4c38-b43b-77df180fdcaa" />
 <br><br>
 nginx_lb/templates/mediawiki-lb.conf.j2
+
 <img width="615" height="477" alt="Screenshot From 2026-04-29 12-53-15" src="https://github.com/user-attachments/assets/4c03258b-2c66-4244-a92c-1d13a3efede3" />
 <br><br>
 nginx_lb/tasks/main.yml
+
 <img width="587" height="710" alt="Screenshot From 2026-04-29 12-54-00" src="https://github.com/user-attachments/assets/cd0abe71-2930-431f-bb4e-97db6c749f07" />
 <br><br>
 <img width="520" height="732" alt="Screenshot From 2026-04-29 12-54-27" src="https://github.com/user-attachments/assets/a34d0e91-dfdd-43d8-bfd6-e69d0f57975b" />
 <br><br>
 Обновим плейбук
+
 <img width="201" height="155" alt="Screenshot From 2026-04-29 12-55-34" src="https://github.com/user-attachments/assets/e8aea3f7-9162-477e-ab31-7561a004baec" />
 <br><br>
 Также нужно изменить адрес сервера MediaWiki на адрес балансировщика в mediawiki_1/defaults/main.yml
@@ -479,6 +506,7 @@ echo "mediawiki-2" | sudo tee /var/www/mediawiki/node.txt
 <br><br>
 Теперь создадим VM где будут бэкапы для файловой системы приложения и базы данных<br>
 Добавим VM для бэкапов в config.json
+
 <img width="304" height="183" alt="Screenshot From 2026-04-29 13-00-48" src="https://github.com/user-attachments/assets/16d61900-395b-43de-8cb7-719813aa773a" />
 <br><br>
 И создадим роль backup для настройки
@@ -488,18 +516,23 @@ ansible-galaxy init backup
 ```
 
 Обновим group_vars/all.yml
+
 <img width="211" height="115" alt="Screenshot From 2026-04-29 13-01-34" src="https://github.com/user-attachments/assets/eabd080e-9e4f-45d9-a00c-35a0048460d3" />
 <br><br>
 backup/defaults/main.yml
+
 <img width="601" height="626" alt="Screenshot From 2026-04-29 13-02-23" src="https://github.com/user-attachments/assets/50cf723b-9cb6-4f9d-8b36-351dba09043a" />
 <br><br>
 backup/templates/backup_db.sh.j2
+
 <img width="612" height="513" alt="Screenshot From 2026-04-29 13-02-58" src="https://github.com/user-attachments/assets/41de3b7b-60ec-4bdc-9fd0-eab9786afc00" />
 <br><br>
 backup/templates/backup_mediawiki_fs.sh.j2
+
 <img width="612" height="592" alt="Screenshot From 2026-04-29 13-03-33" src="https://github.com/user-attachments/assets/b74d87f1-2d16-4351-a272-9bb09a9d5c81" />
 <br><br>
 backup/tasks/main.yml
+
 <img width="617" height="722" alt="Screenshot From 2026-04-30 11-46-22" src="https://github.com/user-attachments/assets/97d81531-82d9-4d59-8447-83a739bf1459" />
 <br><br>
 <img width="518" height="747" alt="Screenshot From 2026-04-30 11-47-07" src="https://github.com/user-attachments/assets/b699f6a5-9f60-489d-97ed-4e681fb450af" />
@@ -507,6 +540,7 @@ backup/tasks/main.yml
 <img width="614" height="472" alt="Screenshot From 2026-04-30 11-47-43" src="https://github.com/user-attachments/assets/79a18b52-447b-43b0-a41a-dd0261bc8726" />
 <br><br>
 И обновим плейбук
+
 <img width="186" height="147" alt="Screenshot From 2026-04-30 11-48-19" src="https://github.com/user-attachments/assets/9a0013e3-37b9-4bfb-ab31-a75093ab8746" />
 <br><br>
 Проверим
@@ -521,6 +555,7 @@ sudo crontab -l
 <br><br>
 Теперь создадим VM для мониторинга где будет Zabbix<br>
 Добавим VM в конфиг файл. Нужно дать больше памяти чтобы не было ошибки при импорте схемы PostgreSQL
+
 <img width="449" height="197" alt="Screenshot From 2026-04-30 11-51-54" src="https://github.com/user-attachments/assets/3b5441ee-eba4-4c4a-aa96-296a287af07f" />
 
 И создадим роль
@@ -530,6 +565,7 @@ ansible-galaxy init zabbix
 ```
 
 Обновим requirements.yml для Zabbix
+
 <img width="362" height="209" alt="Screenshot From 2026-04-30 11-52-42" src="https://github.com/user-attachments/assets/b408cbc7-a5e8-41ac-ac36-6d0091eb2834" />
 
 И модуль community.zabbix
@@ -539,9 +575,11 @@ ansible-galaxy collection install community.zabbix --upgrade
 ```
 
 Обновим group_vars/all.yml
+
 <img width="290" height="507" alt="Screenshot From 2026-04-30 11-53-35" src="https://github.com/user-attachments/assets/1b808f4a-9520-457c-acc7-8545d44f80d3" />
 <br><br>
 zabbix/defaults/main.yml
+
 <img width="677" height="562" alt="Screenshot From 2026-04-30 11-54-11" src="https://github.com/user-attachments/assets/bfe1cd0e-5b31-475f-bd1e-c9042de85509" />
 <br><br>
 <img width="513" height="729" alt="Screenshot From 2026-04-30 11-54-54" src="https://github.com/user-attachments/assets/a3b29432-8b36-4cff-9fbf-13f5b343fa37" />
@@ -549,15 +587,19 @@ zabbix/defaults/main.yml
 <img width="616" height="456" alt="Screenshot From 2026-04-30 11-55-32" src="https://github.com/user-attachments/assets/cb0db01e-b8aa-416a-9216-684b98950c2e" />
 <br><br>
 zabbix/handlers/main.yml
+
 <img width="416" height="483" alt="Screenshot From 2026-04-30 11-56-59" src="https://github.com/user-attachments/assets/fbb35ee5-6bf9-41c6-b075-2d7f20a9c64e" />
 <br><br>
 zabbix/templates/zabbix.conf.php.j2
+
 <img width="462" height="411" alt="Screenshot From 2026-04-30 11-57-39" src="https://github.com/user-attachments/assets/be2896b6-8802-4e9c-b7ac-8b949cffb582" />
 <br><br>
 zabbix/templates/zabbix.nginx.conf.j2
+
 <img width="531" height="438" alt="Screenshot From 2026-04-30 11-58-26" src="https://github.com/user-attachments/assets/54c450ec-bf4f-42e1-8e73-ace9d0986ccc" />
 <br><br>
 zabbix/tasks/main.yml
+
 <img width="864" height="674" alt="Screenshot From 2026-04-30 11-59-13" src="https://github.com/user-attachments/assets/3d15f07e-be86-414c-97ca-9b1b9631e8a4" />
 <br><br>
 <img width="866" height="746" alt="Screenshot From 2026-04-30 11-59-52" src="https://github.com/user-attachments/assets/11a2e7cb-382b-4b8a-8174-fa11f66551cf" />
@@ -569,6 +611,7 @@ zabbix/tasks/main.yml
 <img width="477" height="515" alt="Screenshot From 2026-04-30 12-02-06" src="https://github.com/user-attachments/assets/40374d77-5980-475d-a44a-2c91d112a01f" />
 <br><br>
 zabbix/tasks/monitoring.yml
+
 <img width="541" height="767" alt="Screenshot From 2026-04-30 12-03-06" src="https://github.com/user-attachments/assets/d163faf5-83e4-4d53-9b31-31e7c93bd026" />
 <br><br>
 <img width="661" height="521" alt="Screenshot From 2026-04-30 12-03-49" src="https://github.com/user-attachments/assets/d166ef50-8785-421e-a6c3-606df42ab656" />
@@ -580,6 +623,7 @@ zabbix/tasks/monitoring.yml
 <img width="868" height="337" alt="Screenshot From 2026-04-30 12-09-26" src="https://github.com/user-attachments/assets/e5906d30-5de1-4356-bce0-84c6cdd5d3dc" />
 <br><br>
 Обновим плейбук
+
 <img width="274" height="213" alt="Screenshot From 2026-04-30 12-10-02" src="https://github.com/user-attachments/assets/6bf4e4f8-c35e-4269-8c83-53ed4a1bf4d3" />
 <br><br>
 И проверим
